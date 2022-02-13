@@ -1,0 +1,10 @@
+version: '3'
+services:
+  web:
+    build: "./"
+    volumes:
+      - ".:/var/www/mydocsafe/current:cached"
+    ports:
+      - "127.0.0.1:4000:80"
+    environment:
+      - SYMFONY_ENV=dev

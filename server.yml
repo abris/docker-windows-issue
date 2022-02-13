@@ -1,0 +1,69 @@
+- hosts: all
+  become: true
+  become_method: sudo
+  vars:
+    php_version: '7.4'
+    apache_vhosts:
+      - servername: "mydocsafe.com"
+        documentroot: "/var/www/mydocsafe/current"
+        extra_parameters: |
+          <Directory /var/www/mydocsafe/current>
+              Order Allow,Deny
+              Allow from All
+              SetEnv MDSDEBUG {{ lookup('env','MDSDEBUG') }}
+              SetEnv SYMFONY_ENV {{ lookup('env','SYMFONY_ENV') }}
+          </Directory>
+  pre_tasks:
+    - name: Add repository for PHP 7.
+      apt_repository:
+        repo: ppa:ondrej/php
+        update_cache: yes
+        state: present
+    - name: Update apt-get repo and cache
+      become: true
+      apt:
+        update_cache: 'yes'
+        upgrade: 'yes'
+  roles:
+    - role: geerlingguy.apache
+      apache_create_vhosts: true
+      apache_vhosts_filename: "mydocsafe.conf"    
+      apache_remove_default_vhost: true
+      apache_packages:
+        - apache2
+        - apache2-utils        
+        - libapache2-mod-php7.4
+      apache_mods_enabled:
+        - rewrite.load
+        - headers.load
+        - expires.load
+        - cgi.load
+    - role: geerlingguy.php-versions
+    - role: geerlingguy.php
+      php_webserver_daemon: "apache2"
+      php_version: "7.4"
+      php_packages:
+        - php7.4
+        - php7.4-cli
+        - php7.4-mbstring
+        - php7.4-curl
+        - php7.4-apcu
+        - php7.4-mysql
+        - php7.4-zip
+        - php7.4-dev
+        - php7.4-xml
+        - php7.4-imagick
+        - php7.4-json
+        - php7.4-gd
+        - php7.4-intl
+        - php7.4-mailparse
+      php_use_managed_ini: true
+      php_memory_limit: "512M"
+      php_max_execution_time: "6000000"
+      php_max_input_time: "100000"
+      php_post_max_size: "100M"
+      php_upload_max_filesize: "100M"
+      php_conf_paths:
+        - /etc/php/7.4/apache2
+    - role: geerlingguy.composer
+

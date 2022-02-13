@@ -67,3 +67,66 @@
         - /etc/php/7.4/apache2
     - role: geerlingguy.composer
 
+  tasks:
+    - name: "Ensure dependencies for wkhtmltopdf are installed"
+      apt:
+       name: [xfonts-75dpi, xfonts-base]
+       update_cache: yes
+       cache_valid_time: 300
+       state: present
+
+    - name: "Install wkhtmltopdf (AMD - x86-64)"
+      apt:
+       deb: https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.bionic_amd64.deb
+       state: present
+      when: ansible_architecture == "x86_64"
+
+    - name: "Install wkhtmltopdf (ARM)"
+      apt:
+       deb: https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.bionic_arm64.deb
+       state: present
+      when: ansible_architecture == "aarch64"
+
+    - name: install required packages
+      apt:
+        name:
+          - curl
+          - git
+          - imagemagick
+          - ghostscript
+          - vim
+          - python-openssl
+          - wget
+          - libreoffice
+          - zip
+          - libmcrypt-dev
+          - libpng-dev
+          - nasm
+          - libheif-examples
+
+    - name: install npm packages
+      shell: npm i -g bower gulp
+
+    - user:
+        name: deploy
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/id_rsa
+        group: www-data
+
+    - shell: cat /home/deploy/.ssh/id_rsa.pub
+      register: ps
+
+    - name: Print public key
+      debug: var=ps.stdout_lines
+
+    - name: Creates directory
+      tags: dir
+      file:
+        path: "/var/www/mydocsafe"
+        state: directory
+        recurse: true
+        owner: deploy
+        group: www-data
+        mode: 0775
+

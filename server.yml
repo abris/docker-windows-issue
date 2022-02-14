@@ -66,6 +66,9 @@
       php_conf_paths:
         - /etc/php/7.4/apache2
     - role: geerlingguy.composer
+    - role: geerlingguy.nodejs
+      nodejs_install_npm_user: "{{ ansible_user_id }}"
+      nodejs_version: "10.x"
 
   tasks:
     - name: "Ensure dependencies for wkhtmltopdf are installed"
